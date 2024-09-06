@@ -22,11 +22,6 @@
       const influenceRadius = 200; // Promień wpływu kursora
       let customFont; // Zmienna do przechowywania czcionki
 
-      p.preload = () => {
-        // Załaduj czcionkę
-        customFont = p.loadFont('assets/TINY.ttf'); // Użyj ścieżki do pliku czcionki
-      };
-
       p.setup = () => {
         const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
         canvas.parent('p5-canvas');
