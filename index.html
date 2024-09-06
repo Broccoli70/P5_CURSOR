@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>p5.js Dynamic Letters</title>
+  <!-- Załaduj p5.js z CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+</head>
+<body>
+  <!-- Kontener dla płótna p5.js -->
+  <div id="p5-canvas"></div>
+
+  <script>
+    const sketch = (p) => {
+      const letters = ['1', '0', '.', 'I', '@', ' ', '       ', '       '];
+      const targetText = 'WOOKI'; // Napis, który chcemy uformować
+      let gridLetters = []; // Tablica do przechowywania liter dla siatki
+      let originalLetters = []; // Tablica do przechowywania oryginalnych liter
+      const gridSize = 16; // Rozmiar bazowy
+      const changeInterval = 4; // Liczba klatek między zmianami liter
+      const influenceRadius = 200; // Promień wpływu kursora
+      let customFont; // Zmienna do przechowywania czcionki
+
+      p.preload = () => {
+        // Załaduj czcionkę
+        customFont = p.loadFont('assets/TINY.ttf'); // Użyj ścieżki do pliku czcionki
+      };
+
+      p.setup = () => {
+        const canvas = p.createCanvas(p.windowWidth, p.windowHeight);
+        canvas.parent('p5-canvas');
+        p.noStroke();
+        p.textAlign(p.CENTER, p.CENTER);
+        p.textFont(customFont); // Zastosuj załadowaną czcionkę
+
+        // Inicjalizacja liter dla siatki
+        initializeGridLetters();
+      };
+
+      p.draw = () => {
+        p.clear();
+        p.fill("#FFAA18");
+
+        let targetIndex = 0; // Indeks do śledzenia postępu w napisie "WOOKI"
+
+        // Iteracja po gridzie
+        for (let x = 0; x < p.width; x += gridSize) {
+          for (let y = 0; y < p.height; y += gridSize) {
+            const d = p.dist(p.mouseX, p.mouseY, x + gridSize / 2, y + gridSize / 2);
+
+            // Dynamiczne przesunięcie liter i losowanie tylko w pobliżu kursora
+            let offsetX = 0;
+            let offsetY = 0;
+            let letterIndex = (x / gridSize) * Math.floor(p.height / gridSize) + (y / gridSize);
+
+            if (d < influenceRadius) {
+              // Przesunięcie liter, gdy kursor jest w pobliżu
+              offsetX = p.random(-2, 2); // Przesunięcie X
+              offsetY = p.random(-2, 2); // Przesunięcie Y
+
+              // Zmieniaj litery na "WOOKI" w obrębie kursora
+              if (targetIndex < targetText.length && p.frameCount % changeInterval === 0) {
+                originalLetters[letterIndex] = gridLetters[letterIndex]; // Zapisz oryginalną literę
+                gridLetters[letterIndex] = targetText[targetIndex];
+                targetIndex++;
+              } else if (targetIndex >= targetText.length) {
+                targetIndex = 0; // Resetuj indeks po zakończeniu formowania napisu "WOOKI"
+              }
+
+              // Płynnie zwiększ rozmiar liter w pobliżu kursora
+              let size = p.map(d, 0, influenceRadius, 40, 10); // Skalowanie od 40 (blisko kursora) do 10 (daleko)
+              size = p.constrain(size, 10, 40); // Ograniczenie rozmiaru do przedziału 10-40
+              p.textSize(size);
+            } else {
+              // Litery poza promieniem kursora pozostają małe
+              p.textSize(10);
+
+              // Przywróć oryginalne litery lub losuj nowe, gdy kursor nie jest w pobliżu
+              if (originalLetters[letterIndex]) {
+                gridLetters[letterIndex] = letters[Math.floor(p.random(letters.length))];
+                originalLetters[letterIndex] = null; // Wyczyszczenie oryginalnej wartości po przywróceniu
+              }
+            }
+
+            const letter = gridLetters[letterIndex % gridLetters.length];
+            p.text(letter, x + gridSize / 2 + offsetX, y + gridSize / 2 + offsetY); // Przesunięta pozycja litery
+          }
+        }
+      };
+
+      // Funkcja inicjująca litery dla siatki
+      function initializeGridLetters() {
+        gridLetters = [];
+        originalLetters = []; // Wyczyszczenie oryginalnych liter
+        for (let i = 0; i < Math.floor(p.width / gridSize) * Math.floor(p.height / gridSize); i++) {
+          gridLetters.push(letters[Math.floor(p.random(letters.length))]);
+          originalLetters.push(null); // Inicjalizacja oryginalnych liter jako null
+        }
+      }
+    };
+
+    new p5(sketch);
+  </script>
+</body>
+</html>
